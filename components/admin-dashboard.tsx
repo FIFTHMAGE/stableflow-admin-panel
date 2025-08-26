@@ -14,6 +14,12 @@ import {
   XCircle,
   Clock,
   MoreHorizontal,
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  Calendar,
 } from "lucide-react"
 
 // Mock data for demonstration
@@ -31,6 +37,16 @@ const mockBusinesses = [
     status: "approved",
     type: "Technology",
     appliedDate: "2024-01-16",
+    email: "john@techsolutions.com",
+    phone: "+1 (555) 123-4567",
+    address: "123 Tech Street, San Francisco, CA 94105",
+    description:
+      "We provide comprehensive IT solutions for small and medium businesses, specializing in cloud infrastructure and cybersecurity services.",
+    website: "https://techsolutions.com",
+    businessLicense: "BL-2024-001234",
+    taxId: "12-3456789",
+    expectedVolume: "$50,000/month",
+    documents: ["Business License", "Tax Certificate", "Bank Statement"],
   },
   {
     id: 2,
@@ -39,6 +55,16 @@ const mockBusinesses = [
     status: "pending",
     type: "Food & Beverage",
     appliedDate: "2024-01-25",
+    email: "jane@coffeecorner.com",
+    phone: "+1 (555) 987-6543",
+    address: "456 Main Street, Portland, OR 97201",
+    description:
+      "A cozy neighborhood coffee shop serving artisanal coffee and fresh pastries. We focus on sustainable sourcing and community engagement.",
+    website: "https://coffeecorner.com",
+    businessLicense: "BL-2024-005678",
+    taxId: "98-7654321",
+    expectedVolume: "$15,000/month",
+    documents: ["Business License", "Food Service Permit", "Insurance Certificate"],
   },
   {
     id: 3,
@@ -47,6 +73,16 @@ const mockBusinesses = [
     status: "pending",
     type: "Marketing",
     appliedDate: "2024-02-02",
+    email: "bob@digitalmarketingpro.com",
+    phone: "+1 (555) 456-7890",
+    address: "789 Business Ave, Austin, TX 73301",
+    description:
+      "Full-service digital marketing agency helping businesses grow their online presence through SEO, social media, and paid advertising campaigns.",
+    website: "https://digitalmarketingpro.com",
+    businessLicense: "BL-2024-009876",
+    taxId: "45-6789012",
+    expectedVolume: "$30,000/month",
+    documents: ["Business License", "Professional Liability Insurance", "Client References"],
   },
 ]
 
@@ -72,6 +108,7 @@ const mockTransactions = [
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
+  const [selectedBusiness, setSelectedBusiness] = useState<number | null>(null)
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -119,32 +156,48 @@ export function AdminDashboard() {
         <aside className="w-64 bg-sidebar border-r border-sidebar-border">
           <nav className="p-4 space-y-2">
             <Button
-              variant={activeTab === "overview" ? "default" : "ghost"}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${
+                activeTab === "overview"
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              }`}
               onClick={() => setActiveTab("overview")}
             >
               <TrendingUp className="mr-2 h-4 w-4" />
               Overview
             </Button>
             <Button
-              variant={activeTab === "users" ? "default" : "ghost"}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${
+                activeTab === "users"
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              }`}
               onClick={() => setActiveTab("users")}
             >
               <Users className="mr-2 h-4 w-4" />
               Users
             </Button>
             <Button
-              variant={activeTab === "businesses" ? "default" : "ghost"}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${
+                activeTab === "businesses"
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              }`}
               onClick={() => setActiveTab("businesses")}
             >
               <Building2 className="mr-2 h-4 w-4" />
               Businesses
             </Button>
             <Button
-              variant={activeTab === "transactions" ? "default" : "ghost"}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${
+                activeTab === "transactions"
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              }`}
               onClick={() => setActiveTab("transactions")}
             >
               <CreditCard className="mr-2 h-4 w-4" />
@@ -265,56 +318,229 @@ export function AdminDashboard() {
 
           {activeTab === "businesses" && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground">Business Management</h2>
-                  <p className="text-muted-foreground">Review and approve business applications</p>
-                </div>
-              </div>
+              {selectedBusiness ? (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedBusiness(null)}
+                      className="hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Applications
+                    </Button>
+                  </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Business Applications</CardTitle>
-                  <CardDescription>Manage business registrations and approvals</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {mockBusinesses.map((business) => (
-                      <div
-                        key={business.id}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <Building2 className="h-5 w-5 text-primary" />
-                          </div>
+                  {(() => {
+                    const business = mockBusinesses.find((b) => b.id === selectedBusiness)
+                    if (!business) return null
+
+                    return (
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium text-foreground">{business.name}</p>
-                            <p className="text-sm text-muted-foreground">Owner: {business.owner}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Type: {business.type} • Applied: {business.appliedDate}
-                            </p>
+                            <h2 className="text-3xl font-bold text-foreground">{business.name}</h2>
+                            <p className="text-muted-foreground">Business Application Details</p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge className={getStatusBadge(business.status)}>
+                              {getStatusIcon(business.status)}
+                              <span className="ml-1">{business.status}</span>
+                            </Badge>
+                            {business.status === "pending" && (
+                              <div className="flex space-x-2">
+                                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                                  Approve
+                                </Button>
+                                <Button size="sm" variant="outline">
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getStatusBadge(business.status)}>
-                            {getStatusIcon(business.status)}
-                            <span className="ml-1">{business.status}</span>
-                          </Badge>
-                          {business.status === "pending" && (
-                            <Button size="sm" className="bg-primary hover:bg-primary/90">
-                              Approve
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Business Information</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="flex items-center space-x-3">
+                                <Building2 className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.name}</p>
+                                  <p className="text-sm text-muted-foreground">Business Name</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Users className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.owner}</p>
+                                  <p className="text-sm text-muted-foreground">Business Owner</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.type}</p>
+                                  <p className="text-sm text-muted-foreground">Business Type</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.appliedDate}</p>
+                                  <p className="text-sm text-muted-foreground">Application Date</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Contact Information</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="flex items-center space-x-3">
+                                <Mail className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.email}</p>
+                                  <p className="text-sm text-muted-foreground">Email Address</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <Phone className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.phone}</p>
+                                  <p className="text-sm text-muted-foreground">Phone Number</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start space-x-3">
+                                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                <div>
+                                  <p className="font-medium">{business.address}</p>
+                                  <p className="text-sm text-muted-foreground">Business Address</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <DollarSign className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{business.website}</p>
+                                  <p className="text-sm text-muted-foreground">Website</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card className="lg:col-span-2">
+                            <CardHeader>
+                              <CardTitle>Business Description</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-foreground leading-relaxed">{business.description}</p>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Legal & Financial</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div>
+                                <p className="font-medium">{business.businessLicense}</p>
+                                <p className="text-sm text-muted-foreground">Business License</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">{business.taxId}</p>
+                                <p className="text-sm text-muted-foreground">Tax ID</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">{business.expectedVolume}</p>
+                                <p className="text-sm text-muted-foreground">Expected Monthly Volume</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Submitted Documents</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {business.documents.map((doc, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between p-2 border border-border rounded"
+                                  >
+                                    <div className="flex items-center space-x-2">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-sm">{doc}</span>
+                                    </div>
+                                    <Button variant="ghost" size="sm">
+                                      View
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
                         </div>
                       </div>
-                    ))}
+                    )
+                  })()}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-3xl font-bold text-foreground">Business Management</h2>
+                      <p className="text-muted-foreground">Review and approve business applications</p>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Business Applications</CardTitle>
+                      <CardDescription>Manage business registrations and approvals</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {mockBusinesses.map((business) => (
+                          <div
+                            key={business.id}
+                            className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                            onClick={() => setSelectedBusiness(business.id)}
+                          >
+                            <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                <Building2 className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-foreground">{business.name}</p>
+                                <p className="text-sm text-muted-foreground">Owner: {business.owner}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Type: {business.type} • Applied: {business.appliedDate}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge className={getStatusBadge(business.status)}>
+                                {getStatusIcon(business.status)}
+                                <span className="ml-1">{business.status}</span>
+                              </Badge>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           )}
 
